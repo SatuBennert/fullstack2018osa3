@@ -1,6 +1,7 @@
 // tulostaa:
 // console.log('hello world')
-
+// mongodb://<dbuser>:<dbpassword>@ds133558.mlab.com:33558/persons
+// mongodb://Rexona:Rexona123@ds1333558.mlab.com:33558/persons
 
 const express = require('express')
 const app = express()
@@ -9,6 +10,18 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 // front end toimimaan back-endin kanssa: cors
 const cors = require('cors')
+const mongoose = require('mongoose')
+const Person = require('./models/person')
+
+const url  = 'mongodb://Rexona:Rexona123@ds133558.mlab.com:33558/persons'
+mongoose.connect(url)
+
+
+
+// const Person = mongoose.model('Person', {
+//   name: String,
+//   phone: Number
+//   })
 
 // GET-pyyntöjen oletushakemistoksi build
 app.use(express.static('build'))
@@ -54,24 +67,57 @@ let persons = [
 ]
 
 
+const formatPerson = (person) => {
+  console.log("person number " , person.number)
+  return {
+    name: person.name,
+    phone: person.number,
+    id: person._id
+  }
+}
+
 app.get('/api/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
+// // ennen tietokantaa
+// app.get('/api/persons', (req, res) => {
+//   res.json(persons)
+// })
+
+
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Person
+    .find({}, {__v: 0})
+    .then(persons => {
+      res.json(persons.map(formatPerson))
+    })
 })
 
+
 app.get('/api/persons/:id', (reg, res) => {
-  const id = Number(reg.params.id)
-  let person = persons.find(person => id === person.id)
-  if (person) {
-    res.json(person) }
-  else {
-    //res.status(404).end()
-    res.send('<div>' + 'EI ' + ' ole ' + ' eikä ' + ' tule: ' + id + '<div>')
-  }
+  Person
+    .findById(req.params.id)
+    .then(person => {
+       if (person) {
+        res.json(formatPerson(person))
+      } else {
+        res.status(404).end()
+      }
+    })
+
+  // const id = Number(reg.params.id)
+  // let person = persons.find(person => id === person.id)
+  // if (person) {
+  //   res.json(person) }
+  // else {
+  //   //res.status(404).end()
+  //   res.send('<div>' + 'EI ' + ' ole ' + ' eikä ' + ' tule: ' + id + '<div>')
+  // }
 })
+
+
+
 
 app.get('/info', (reg, res) => {
   const date = new Date()
@@ -79,10 +125,19 @@ app.get('/info', (reg, res) => {
 })
 
 app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(person => person.id !== id)
-  res.status(204).end()
+  Person
+  .findByIdAndRemove({_id: req.params.id}, 
+   function(err, docs){
+  if(err) res.json(err)
+  else    res.status(204).end()
 })
+
+  // const id = Number(req.params.id)
+  // persons = persons.filter(person => person.id !== id)
+  // res.status(204).end()
+})
+
+
 const generateId = () => {
   const min = 6
   const max = 8000
@@ -105,6 +160,7 @@ app.post('/api/persons', (req, res) => {
   if (persons.find((fperson) => fperson.name === body.name)) {
     return res.status(400).json({error: 'Error: ' + body.name + ' exists already. Pls change.'})
   }
+  console.log("tarkistus ok")
 // luodaan person-olio
   const person = {
     name: body.name,
@@ -112,11 +168,18 @@ app.post('/api/persons', (req, res) => {
     //date: new Date(),
     id: Number(generateId())
   }
-
+ console.log("uusi olio on luotu")
+// tallettaa fronttiin
   persons = persons.concat(person) // lisätään loppuun
   console.log(person) // tulostaa varmuuden vuoksi
+// tallettaa kantaan
+  Person
+    .save()
+    .then(savedPerson => {
+      res.json(formatPerson(savedPerson))
+    })
 
-  res.json(person)
+  //res.json(person)
 })
 
 const PORT = process.env.PORT || 3001
