@@ -10,9 +10,13 @@ const morgan = require('morgan')
 // front end toimimaan back-endin kanssa: cors
 const cors = require('cors')
 
+// GET-pyyntöjen oletushakemistoksi build
+app.use(express.static('build'))
+
 app.use(cors())
 
 app.use(bodyParser.json())
+
 // ao. out: GET /persons/4 304 - - 3.911 ms
 //app.use(morgan('tiny')); 
 
