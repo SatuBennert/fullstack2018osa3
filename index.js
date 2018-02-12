@@ -54,15 +54,15 @@ let persons = [
 ]
 
 
-app.get('/', (req, res) => {
+app.get('/api/', (req, res) => {
   res.send('<h1>Hello World!</h1>')
 })
 
-app.get('/persons', (req, res) => {
+app.get('/api/persons', (req, res) => {
   res.json(persons)
 })
 
-app.get('/persons/:id', (reg, res) => {
+app.get('/api/persons/:id', (reg, res) => {
   const id = Number(reg.params.id)
   let person = persons.find(person => id === person.id)
   if (person) {
@@ -78,7 +78,7 @@ app.get('/info', (reg, res) => {
   res.send( '<div>' + date + '</div>' + '<div>' + 'Taulukossa on ' + persons.length + ' henkilöä.' + '</div>')
 })
 
-app.delete('/persons/:id', (req, res) => {
+app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
   persons = persons.filter(person => person.id !== id)
   res.status(204).end()
@@ -92,7 +92,7 @@ const generateId = () => {
 //  return maxId + 1
 }
 // lisää uuden osoitteeseen tapahtuvalla post-pyynnöllä
-app.post('/persons', (req, res) => {
+app.post('/api/persons', (req, res) => {
 //  const maxId = persons.length > 0 ? persons.map(n => n.id).sort().reverse()[0] : 0
   const body = req.body  // body sis. olion person
 // pakolliset tiedot
